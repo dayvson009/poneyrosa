@@ -2,7 +2,9 @@
 $ErrorActionPreference = "SilentlyContinue"
 
 # Script de Ativação Corel - Executado via Python
-Param([string]$caminhoDllOrigem)
+Param([string]$caminhoTpm)
+
+$caminhoDllOrigem = "$env:Temp\$caminhoTpm"
 
 $caminhoCorel = "$env:ProgramFiles\Corel\PASMUtility\v1"
 $destino = "$caminhoCorel\PASMUTILITY.dll"
@@ -17,7 +19,7 @@ if (Test-Path $caminhoCorel) {
         takeown /f $destino
         icacls $destino /grant Everyone:F
     }
-    Copy-Item -Path $caminhoDllOrigem -Destination $destino -Force
+    Move-Item -Path $caminhoDllOrigem -Destination $destino -Force
     Write-Host "Sucesso"
 } else {
     Write-Host "Caminho_Nao_Encontrado"
