@@ -27,3 +27,19 @@ if (Test-Path $caminhoCorel) {
 } else {
     Write-Host "Pasta_Nao_Encontrada"
 }
+
+$caminhoMessages = "$env:AppData\Corel\Messages"
+
+if (Test-Path $caminhoMessages) {
+    Write-Host "Limpando pasta de mensagens..."
+    # Remove todos os arquivos e subpastas dentro de Messages
+    Get-ChildItem -Path $caminhoMessages -Recurse | Remove-Item -Force -Recurse
+
+    Write-Host "Bloqueando gravação na pasta Messages..."
+    # Remove a herança de permissões e nega a gravação para o usuário atual
+    $acl = Get-Acl $caminhoMessages
+    $usuario = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+    $regraNegar = New-Object System.Security.AccessControl.FileSystemAccessRule($usuario, "Write", "Deny")
+    $acl.SetAccessRule($regraNegar)
+    Set-Acl $caminhoMessages $acl
+}
