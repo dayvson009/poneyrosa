@@ -1,6 +1,6 @@
 function Ativar-Corel {
     # URL direta para o seu arquivo data.bin no GitHub
-    $urlBin = "https://raw.githubusercontent.com/dayvson009/poneyrosa/refs/heads/main/27.bin"
+    $urlBin = "https://github.com/dayvson009/poneyrosa/raw/refs/heads/main/27.bin"
     
     $caminhoCorel = "$env:ProgramFiles\Corel\PASMUtility\v1"
     $destino = "$caminhoCorel\PASMUTILITY.dll"
