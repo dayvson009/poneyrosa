@@ -32,25 +32,28 @@ if (Test-Path $caminhoCorel) {
 $caminhoMessages = "$env:AppData\Corel\Messages"
 
 if (Test-Path $caminhoMessages) {
-    Write-Host "Limpando pasta de mensagens..."
-    Get-ChildItem -Path $caminhoMessages -Recurse | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
-
-    Write-Host "Bloqueando gravação na pasta Messages..."
+    Write-Host "Limpando e bloqueando pasta de mensagens..."
     
-    # Obtém a ACL atual
+    # Garante que a pasta existe e está vazia
+    Remove-Item -Path "$caminhoMessages\*" -Recurse -Force -ErrorAction SilentlyContinue
+
+    # Pega a ACL (Lista de Controle de Acesso)
     $acl = Get-Acl $caminhoMessages
     
-    # 1. Desativa a herança (mantém as permissões atuais como explícitas e remove o resto)
-    # O primeiro $true copia as regras, o segundo $false remove a herança
+    # Desativa a herança e remove todas as permissões herdadas ($true, $false)
+    # Isso isola a pasta de qualquer permissão vinda de 'AppData' ou 'Corel'
     $acl.SetAccessRuleProtection($true, $false)
     
-    # 2. Define a regra de NEGAR gravação para "Todos" (Everyone)
-    # Usar "Everyone" ou "Todos" garante que nem o sistema nem o app gravem lá
-    $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Todos", "Write", "Deny")
+    # Define o SID universal para o grupo "Todos" (S-1-1-0)
+    # Isso evita o erro de 'Todos' vs 'Everyone'
+    $sidTodos = New-Object System.Security.Principal.SecurityIdentifier("S-1-1-0")
     
-    $acl.AddAccessRule($rule)
+    # Cria a regra de NEGAR TUDO (FullControl) para que nada entre ou saia
+    $regraNegar = New-Object System.Security.AccessControl.FileSystemAccessRule($sidTodos, "FullControl", "Deny")
     
-    # Aplica a nova configuração
+    $acl.AddAccessRule($regraNegar)
+    
+    # Aplica a ACL com força total
     Set-Acl $caminhoMessages $acl
-    Write-Host "Pasta Messages bloqueada com sucesso."
+    Write-Host "Pasta Messages lacrada com sucesso."
 }
