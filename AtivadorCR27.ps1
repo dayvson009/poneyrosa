@@ -28,18 +28,29 @@ if (Test-Path $caminhoCorel) {
     Write-Host "Pasta_Nao_Encontrada"
 }
 
+# 3. Limpeza e Bloqueio da pasta de Mensagens (Pop-ups)
 $caminhoMessages = "$env:AppData\Corel\Messages"
 
 if (Test-Path $caminhoMessages) {
     Write-Host "Limpando pasta de mensagens..."
-    # Remove todos os arquivos e subpastas dentro de Messages
-    Get-ChildItem -Path $caminhoMessages -Recurse | Remove-Item -Force -Recurse
+    Get-ChildItem -Path $caminhoMessages -Recurse | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
 
     Write-Host "Bloqueando gravação na pasta Messages..."
-    # Remove a herança de permissões e nega a gravação para o usuário atual
+    
+    # Obtém a ACL atual
     $acl = Get-Acl $caminhoMessages
-    $usuario = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-    $regraNegar = New-Object System.Security.AccessControl.FileSystemAccessRule($usuario, "Write", "Deny")
-    $acl.SetAccessRule($regraNegar)
+    
+    # 1. Desativa a herança (mantém as permissões atuais como explícitas e remove o resto)
+    # O primeiro $true copia as regras, o segundo $false remove a herança
+    $acl.SetAccessRuleProtection($true, $false)
+    
+    # 2. Define a regra de NEGAR gravação para "Todos" (Everyone)
+    # Usar "Everyone" ou "Todos" garante que nem o sistema nem o app gravem lá
+    $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Todos", "Write", "Deny")
+    
+    $acl.AddAccessRule($rule)
+    
+    # Aplica a nova configuração
     Set-Acl $caminhoMessages $acl
+    Write-Host "Pasta Messages bloqueada com sucesso."
 }
