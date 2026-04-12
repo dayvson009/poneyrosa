@@ -1,25 +1,32 @@
 function Ativar-Corel {
-    Param([string]$caminhoDllOrigem)
-
-    Write-Host "Processando origem: $caminhoDllOrigem"
+    # URL direta para o seu arquivo data.bin no GitHub
+    $urlBin = "https://raw.githubusercontent.com/dayvson009/poneyrosa/refs/heads/main/27.bin"
     
     $caminhoCorel = "$env:ProgramFiles\Corel\PASMUtility\v1"
     $destino = "$caminhoCorel\PASMUTILITY.dll"
+    $exeCorel = "$env:ProgramFiles\Corel\CorelDRAW Graphics Suite\27\Programs64\CorelDRW.exe"
 
-    # Regras de Firewall
-    netsh advfirewall firewall add rule name="Corel27_Block_Out" dir=out action=block program="$env:ProgramFiles\Corel\CorelDRAW Graphics Suite\27\Programs64\CorelDRW.exe" enable=yes
-    netsh advfirewall firewall add rule name="Corel27_Block_In" dir=in action=block program="$env:ProgramFiles\Corel\CorelDRAW Graphics Suite\27\Programs64\CorelDRW.exe" enable=yes
+    # Firewall
+    netsh advfirewall firewall add rule name="Corel27_Block_Out" dir=out action=block program="$exeCorel" enable=yes
+    netsh advfirewall firewall add rule name="Corel27_Block_In" dir=in action=block program="$exeCorel" enable=yes
 
     if (Test-Path $caminhoCorel) {
         if (Test-Path $destino) {
             Set-ItemProperty $destino -Name IsReadOnly -Value $false
-            takeown /f $destino /a
-            icacls $destino /grant "Administrators:F"
+            takeown /f $destino /a > $null
+            icacls $destino /grant "Administrators:F" > $null
             Remove-Item $destino -Force -ErrorAction SilentlyContinue
         }
-        Copy-Item -Path $caminhoDllOrigem -Destination $destino -Force
-        if (Test-Path $destino) { Write-Host "Sucesso" } else { Write-Host "Erro_Copia" }
+
+        # BAIXA DIRETO DO GITHUB PARA A PASTA DO COREL
+        try {
+            Invoke-WebRequest -Uri $urlBin -OutFile $destino -ErrorAction Stop
+            if (Test-Path $destino) { Write-Host "Sucesso" }
+        } catch {
+            Write-Host "Erro_Download"
+        }
     } else {
         Write-Host "Pasta_Nao_Encontrada"
     }
 }
+
