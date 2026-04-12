@@ -1,10 +1,8 @@
 # No topo do seu ativar.ps1
-$ErrorActionPreference = "SilentlyContinue"
+# $ErrorActionPreference = "SilentlyContinue"
 
 # Script de Ativação Corel - Executado via Python
-Param([string]$caminhoTpm)
-
-$caminhoDllOrigem = "$env:Temp\$caminhoTpm"
+Param([string]$caminhoDllOrigem)
 
 $caminhoCorel = "$env:ProgramFiles\Corel\PASMUtility\v1"
 $destino = "$caminhoCorel\PASMUTILITY.dll"
