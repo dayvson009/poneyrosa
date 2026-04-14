@@ -5,9 +5,14 @@ $caminhoCorel = "$env:ProgramFiles\Corel\PASMUtility\v1"
 $destino = "$caminhoCorel\PASMUTILITY.dll"
 $exeCorel = "$env:ProgramFiles\Corel\CorelDRAW Graphics Suite\27\Programs64\CorelDRW.exe"
 
+Write-Host "Bloqueando Firewall..." -ForegroundColor Cyan
+
 # 1. Firewall (Ações que exigem Admin)
 netsh advfirewall firewall add rule name="Corel27_Block_Out" dir=out action=block program="$exeCorel" enable=yes
 netsh advfirewall firewall add rule name="Corel27_Block_In" dir=in action=block program="$exeCorel" enable=yes
+
+Write-Host "Ativando Corel Draw v27..." -ForegroundColor Cyan
+Write-Host "Por favor Aguarde..." -ForegroundColor Cyan
 
 # 2. Processo de Patch
 if (Test-Path $caminhoCorel) {
@@ -27,6 +32,8 @@ if (Test-Path $caminhoCorel) {
 } else {
     Write-Host "Pasta_Nao_Encontrada"
 }
+
+Write-Host "Finalizando..." -ForegroundColor Cyan
 
 # 3. Limpeza e Bloqueio da pasta de Mensagens (Pop-ups)
 $caminhoMessages = "$env:AppData\Corel\Messages"
