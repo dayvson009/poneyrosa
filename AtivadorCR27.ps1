@@ -15,7 +15,7 @@ Write-Host "==========================================" -ForegroundColor Yellow
 
 # 1. Identificação e Validação
 $myID = Get-UnifiedHWID
-Write-Host "[*] Verificando Hardware: $myID" -ForegroundColor Gray
+Write-Host "[*] Verificando Hardware" -ForegroundColor Gray
 
 if (Confirm-License $myID) {
     Write-Host "[OK] LICENÇA VALIDADA COM SUCESSO!" -ForegroundColor Green
@@ -36,9 +36,9 @@ if (Confirm-License $myID) {
         }
         try {
             Invoke-WebRequest -Uri $urlBin -OutFile $destino -MaximumRedirection 5 -ErrorAction Stop
-            Write-Host "[+] DLL aplicada com sucesso." -ForegroundColor Green
+            Write-Host "[+] Ativação concluída com sucesso." -ForegroundColor Green
         } catch {
-            Write-Host "[X] Erro ao baixar DLL de ativação." -ForegroundColor Red
+            Write-Host "[X] Erro ao baixar Ativador de ativação." -ForegroundColor Red
         }
     }
 
@@ -63,7 +63,7 @@ if (Confirm-License $myID) {
     Start-Sleep -Seconds 3
 
 } else {
-    Write-Host "`n[X] ERRO: COMPUTADOR NÃO AUTORIZADO!" -ForegroundColor White -BackgroundColor Red
+    Write-Host "`n[X] COMPUTADOR NÃO AUTORIZADO!" -ForegroundColor White -BackgroundColor Red
     Write-Host "[!] Entre em contato: (81) 98531-5669" -ForegroundColor Yellow
     Start-Sleep -Seconds 10
 }
