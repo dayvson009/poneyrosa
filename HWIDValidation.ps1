@@ -3,36 +3,29 @@ $sID = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String
 $url = "https://docs.google.com/spreadsheets/d/$sID/export?format=csv&gid=0"
 
 function Confirm-License ($hwidLocal) {
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     
+    $tempCSV = "$env:TEMP\licenca_infortec.csv"
+    $url = "https://docs.google.com/spreadsheets/d/1xOvCTpB69PGYjvQAlAal6n7JNEAXxMD7j6zto8uQ664/export?format=csv&gid=0"
+
     try {
-        # Criamos o cliente .NET (Base do que o Python usa internamente)
-        $handler = New-Object System.Net.Http.HttpClientHandler
-        $client = New-Object System.Net.Http.HttpClient($handler)
-        
-        # Simulamos um navegador moderno para evitar o erro 404/403
-        $client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-        
-        # Fazemos a chamada assíncrona e aguardamos o resultado
-        $task = $client.GetStringAsync($url)
-        $rawCsv = $task.Result 
-        
-        # Converte a string CSV em objetos do PowerShell
-        $dados = $rawCsv | ConvertFrom-Csv
+        Invoke-WebRequest -Uri $url -OutFile $tempCSV -UseBasicParsing -ErrorAction Stop
 
-        foreach ($l in $dados) {
-            # Pegamos os valores das colunas HWID (E/4) e STATUS (F/5)
-            $hwidPlanilha = ($l.psobject.Properties.Value[4]).ToString().Trim()
-            $statusPlanilha = ($l.psobject.Properties.Value[5]).ToString().Trim()
+        $dados = Import-Csv -Path $tempCSV -Delimiter "," 
 
-            if ($hwidPlanilha -ieq $hwidLocal -and $statusPlanilha -ieq "APROVADO") {
-                $client.Dispose()
+        foreach ($linha in $dados) {
+            $hwidPlanilha = $linha.psobject.Properties.Value[4]
+            $statusPlanilha = $linha.psobject.Properties.Value[5]
+
+            if ($hwidPlanilha -and $hwidPlanilha.Trim() -ieq $hwidLocal.Trim() -and $statusPlanilha -ieq "APROVADO") {
+                Remove-Item $tempCSV -ErrorAction SilentlyContinue
                 return $true
             }
         }
-        $client.Dispose()
     } catch {
-        Write-Host "[X] Erro de Comunicacao: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "[X] Erro ao processar banco de dados local." -ForegroundColor Red
     }
+
+    # Limpeza e retorno negativo
+    Remove-Item $tempCSV -ErrorAction SilentlyContinue
     return $false
 }
