@@ -1,8 +1,11 @@
-$b64 = "MXhPdkNUcEI2OVBHWmp2UUFsQWFsNm43Sk5FQVh4TUQ3ajZ6dG84dVE2NjQ="
+$b64 = "MXRYSEpYYkNQRXBWOXhWc1JnZzdkdjVDWDVmNlZ3N1BEcFk2aW9JcUJmNWc="
 $sID = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($b64))
 $url = "https://docs.google.com/spreadsheets/d/$sID/export?format=csv&gid=0"
 
 function Confirm-License ($hwidLocal) {
+    Write-Host $hwidLocal
+    Write-Host "TESTE"
+
     $tempCSV = "$env:TEMP\licenca_infortec.csv"
 
     try {
@@ -24,6 +27,13 @@ function Confirm-License ($hwidLocal) {
 
             $hwidPlanilha = $valHwid.ToString().Trim()
             $statusPlanilha = $valStatus.ToString().Trim()
+
+            Write-Host $linha
+            Write-Host $hwidPlanilha
+            Write-Host $statusPlanilha
+            Write-Host $hwidLocal
+            Write-Host $hwidPlanilha -ieq $hwidLocalLimpo
+            Write-Host $statusPlanilha -ieq "APROVADO"
 
             # Comparação de Aprovação
             if ($hwidPlanilha -ieq $hwidLocalLimpo -and $statusPlanilha -ieq "APROVADO") {
