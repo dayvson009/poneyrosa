@@ -3,29 +3,50 @@ $sID = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String
 $url = "https://docs.google.com/spreadsheets/d/$sID/export?format=csv&gid=0"
 
 function Confirm-License ($hwidLocal) {
-    
     $tempCSV = "$env:TEMP\licenca_infortec.csv"
-    $url = "https://docs.google.com/spreadsheets/d/1xOvCTpB69PGYjvQAlAal6n7JNEAXxMD7j6zto8uQ664/export?format=csv&gid=0"
 
     try {
         Invoke-WebRequest -Uri $url -OutFile $tempCSV -UseBasicParsing -ErrorAction Stop
-
         $dados = Import-Csv -Path $tempCSV -Delimiter "," 
 
-        foreach ($linha in $dados) {
-            $hwidPlanilha = $linha.psobject.Properties.Value[4]
-            $statusPlanilha = $linha.psobject.Properties.Value[5]
+        # Limpamos o HWID local uma única vez no início para evitar erros de nulo depois
+        $hwidLocalLimpo = if ($null -ne $hwidLocal) { $hwidLocal.ToString().Trim() } else { "" }
 
-            if ($hwidPlanilha -and $hwidPlanilha.Trim() -ieq $hwidLocal.Trim() -and $statusPlanilha -ieq "APROVADO") {
+        foreach ($linha in $dados) {
+            # Captura os valores usando o nome das colunas (mais seguro que índice)
+            $valHwid = $linha.HWID
+            $valStatus = $linha.STATUS
+
+            # Se a linha atual não tiver HWID ou STATUS, pula para a próxima sem dar erro
+            if ([string]::IsNullOrWhiteSpace($valHwid) -or [string]::IsNullOrWhiteSpace($valStatus)) {
+                continue
+            }
+
+            $hwidPlanilha = $valHwid.ToString().Trim()
+            $statusPlanilha = $valStatus.ToString().Trim()
+
+            # Comparação de Aprovação
+            if ($hwidPlanilha -ieq $hwidLocalLimpo -and $statusPlanilha -ieq "APROVADO") {
+                Write-Host "[!] Aprovado." -ForegroundColor Green
                 Remove-Item $tempCSV -ErrorAction SilentlyContinue
                 return $true
             }
+
+            # Comparação de Rejeição
+            if ($hwidPlanilha -ieq $hwidLocalLimpo -and $statusPlanilha -ieq "REJEITADO") {
+                Write-Host "[x] Permissao negada pelo administrador." -ForegroundColor Red
+                Remove-Item $tempCSV -ErrorAction SilentlyContinue
+                return $false
+            }
         }
+
+        # Se terminou o loop e não retornou TRUE, significa que não achou o HWID aprovado
+        Write-Host "[X] HWID nao encontrado ou pendente de aprovacao." -ForegroundColor Yellow
+
     } catch {
-        Write-Host "[X] Erro ao processar banco de dados local." -ForegroundColor Red
+        Write-Host "[X] Erro ao processar solicitacao: $($_.Exception.Message)" -ForegroundColor Red
     }
 
-    # Limpeza e retorno negativo
     Remove-Item $tempCSV -ErrorAction SilentlyContinue
     return $false
 }
